@@ -80,24 +80,51 @@ public class InstanceRegistry extends PeerAwareInstanceRegistryImpl
 				count == 0 ? this.defaultOpenForTrafficCount : count);
 	}
 
+	/**
+	 * 服务注册
+	 * @param info
+	 * @param leaseDuration
+	 * @param isReplication
+	 */
 	@Override
 	public void register(InstanceInfo info, int leaseDuration, boolean isReplication) {
 		handleRegistration(info, leaseDuration, isReplication);
 		super.register(info, leaseDuration, isReplication);
 	}
 
+	/**
+	 * 服务注册
+	 * @param info
+	 * @param isReplication
+	 */
 	@Override
 	public void register(final InstanceInfo info, final boolean isReplication) {
 		handleRegistration(info, resolveInstanceLeaseDuration(info), isReplication);
 		super.register(info, isReplication);
 	}
 
+	/**
+	 * 服务下线
+	 * @param appName
+	 * @param serverId
+	 * @param isReplication
+	 * @return
+	 */
 	@Override
 	public boolean cancel(String appName, String serverId, boolean isReplication) {
+		// 发布服务下线事件
 		handleCancelation(appName, serverId, isReplication);
+		// 服务下线
 		return super.cancel(appName, serverId, isReplication);
 	}
 
+	/**
+	 * 服务续约
+	 * @param appName
+	 * @param serverId
+	 * @param isReplication
+	 * @return
+	 */
 	@Override
 	public boolean renew(final String appName, final String serverId,
 			boolean isReplication) {
@@ -113,11 +140,15 @@ public class InstanceRegistry extends PeerAwareInstanceRegistryImpl
 						break;
 					}
 				}
+
+				// 发布续约事件，以便扩展
 				publishEvent(new EurekaInstanceRenewedEvent(this, appName, serverId,
 						instance, isReplication));
 				break;
 			}
 		}
+
+		// 续约
 		return super.renew(appName, serverId, isReplication);
 	}
 

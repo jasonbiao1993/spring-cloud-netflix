@@ -34,6 +34,8 @@ import org.springframework.web.context.ServletContextAware;
 
 /**
  * @author Dave Syer
+ *
+ * Eureka Serve启动r 通过 Lifecycle钩子函数，Lifecycle容器初始化后执行
  */
 @Configuration(proxyBeanMethods = false)
 public class EurekaServerInitializerConfiguration
@@ -64,15 +66,23 @@ public class EurekaServerInitializerConfiguration
 
 	@Override
 	public void start() {
+		// 启动一个线程做初始化
 		new Thread(() -> {
 			try {
 				// TODO: is this class even needed now?
+				// 初始化EurekaServer，同时启动Eureka Server
+				// 调用 servlet 接口方法手工触发启动
 				eurekaServerBootstrap.contextInitialized(
 						EurekaServerInitializerConfiguration.this.servletContext);
 				log.info("Started Eureka Server");
 
+				// 发布EurekaServer的注册事件
 				publish(new EurekaRegistryAvailableEvent(getEurekaServerConfig()));
+
+				// 设置启动的状态为true
 				EurekaServerInitializerConfiguration.this.running = true;
+
+				// 发送Eureka Start 事件 ， 其他还有各种事件，我们可以监听这种时间，然后做一些特定的业务需求
 				publish(new EurekaServerStartedEvent(getEurekaServerConfig()));
 			}
 			catch (Exception ex) {
@@ -93,6 +103,7 @@ public class EurekaServerInitializerConfiguration
 	@Override
 	public void stop() {
 		this.running = false;
+		// 销毁上下文
 		eurekaServerBootstrap.contextDestroyed(this.servletContext);
 	}
 

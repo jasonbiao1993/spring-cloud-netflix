@@ -80,7 +80,9 @@ public class EurekaServerBootstrap {
 
 	public void contextInitialized(ServletContext context) {
 		try {
+			// 初始化Eureka的环境变量
 			initEurekaEnvironment();
+			// 初始化Eureka的上下文
 			initEurekaServerContext();
 
 			context.setAttribute(EurekaServerContext.class.getName(), this.serverContext);
@@ -109,6 +111,7 @@ public class EurekaServerBootstrap {
 	protected void initEurekaEnvironment() throws Exception {
 		log.info("Setting the eureka configuration..");
 
+		// 默认获取 config.properties 中的属性
 		String dataCenter = ConfigurationManager.getConfigInstance()
 				.getString(EUREKA_DATACENTER);
 		if (dataCenter == null) {
@@ -136,27 +139,36 @@ public class EurekaServerBootstrap {
 	}
 
 	protected void initEurekaServerContext() throws Exception {
-		// For backward compatibility
+		// For backward compatibility，
+		// 为向后兼容，设置实例转换，为兼容version1
+		// 设置json与xml序列化工具
 		JsonXStream.getInstance().registerConverter(new V1AwareInstanceInfoConverter(),
 				XStream.PRIORITY_VERY_HIGH);
 		XmlXStream.getInstance().registerConverter(new V1AwareInstanceInfoConverter(),
 				XStream.PRIORITY_VERY_HIGH);
 
+		// 获取实例信息，是否是aws，是则初始化 aws绑定
 		if (isAws(this.applicationInfoManager.getInfo())) {
 			this.awsBinder = new AwsBinderDelegate(this.eurekaServerConfig,
 					this.eurekaClientConfig, this.registry, this.applicationInfoManager);
 			this.awsBinder.start();
 		}
 
+		// 初始化eureka server上下文
 		EurekaServerContextHolder.initialize(this.serverContext);
 
 		log.info("Initialized server context");
 
 		// Copy registry from neighboring eureka node
+		// 从相邻的eureka节点复制注册表
 		int registryCount = this.registry.syncUp();
+		// 默认每30秒发送心跳，1分钟就是2次
+		// 修改eureka状态为up
+		// 同时，这里面会开启一个定时任务，用于清理 60秒没有心跳的客户端。自动下线
 		this.registry.openForTraffic(this.applicationInfoManager, registryCount);
 
 		// Register all monitoring statistics.
+		// 注册所有监视统计信息
 		EurekaMonitors.registerAllStats();
 	}
 
@@ -183,6 +195,7 @@ public class EurekaServerBootstrap {
 	}
 
 	protected boolean isAws(InstanceInfo selfInstanceInfo) {
+		// 设置数据注册中心是否为 amazon
 		boolean result = DataCenterInfo.Name.Amazon == selfInstanceInfo
 				.getDataCenterInfo().getName();
 		log.info("isAws returned " + result);

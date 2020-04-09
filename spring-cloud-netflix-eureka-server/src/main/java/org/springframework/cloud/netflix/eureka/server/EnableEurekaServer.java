@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Import;
  *
  * @author Dave Syer
  * @author Biju Kunjummen
- *
+ * 启用这个注解的目的是为了激活：EurekaServerAutoConfiguration类
  */
 
 @Target(ElementType.TYPE)

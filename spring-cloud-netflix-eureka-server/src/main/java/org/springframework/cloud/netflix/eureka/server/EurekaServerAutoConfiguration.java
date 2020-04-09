@@ -114,6 +114,10 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				EurekaServerAutoConfiguration.class);
 	}
 
+	/**
+	 * 加载EurekaController，SpringCloud 提供了一些额外的接口，用来获取eurekaServer的信息
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnProperty(prefix = "eureka.dashboard", name = "enabled",
 			matchIfMissing = true)
@@ -126,6 +130,10 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 		EurekaJacksonCodec.setInstance(JACKSON_JSON.getCodec());
 	}
 
+	/**
+	 * 服务端编码
+	 * @return
+	 */
 	@Bean
 	public ServerCodecs serverCodecs() {
 		return new CloudServerCodecs(this.eurekaServerConfig);
@@ -148,6 +156,11 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 		return new ReplicationClientAdditionalFilters(Collections.emptySet());
 	}
 
+	/**
+	 * 接收客户端的注册等请求就是通过InstanceRegistry来处理的，是真正处理业务的类，接下来会详细分析
+	 * @param serverCodecs
+	 * @return
+	 */
 	@Bean
 	public PeerAwareInstanceRegistry peerAwareInstanceRegistry(
 			ServerCodecs serverCodecs) {
@@ -158,6 +171,14 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				this.instanceRegistryProperties.getDefaultOpenForTrafficCount());
 	}
 
+
+	/**
+	 * 配置服务节点信息，这里的作用主要是为了配置Eureka的peer节点，也就是说当有收到有节点注册上来的时候，需要通知给哪些节点
+	 * @param registry
+	 * @param serverCodecs
+	 * @param replicationClientAdditionalFilters
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public PeerEurekaNodes peerEurekaNodes(PeerAwareInstanceRegistry registry,
@@ -168,6 +189,13 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				replicationClientAdditionalFilters);
 	}
 
+	/**
+	 * EurekaServer的上下文
+	 * @param serverCodecs
+	 * @param registry
+	 * @param peerEurekaNodes
+	 * @return
+	 */
 	@Bean
 	public EurekaServerContext eurekaServerContext(ServerCodecs serverCodecs,
 			PeerAwareInstanceRegistry registry, PeerEurekaNodes peerEurekaNodes) {
@@ -175,6 +203,12 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 				registry, peerEurekaNodes, this.applicationInfoManager);
 	}
 
+	/**
+	 * 初始化Eureka-server，会同步其他注册中心的数据到当前注册中心
+	 * @param registry
+	 * @param serverContext
+	 * @return
+	 */
 	@Bean
 	public EurekaServerBootstrap eurekaServerBootstrap(PeerAwareInstanceRegistry registry,
 			EurekaServerContext serverContext) {
@@ -184,6 +218,7 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 	}
 
 	/**
+	 * 配置拦截器，ServletContainer里面实现了jersey框架，通过他来实现eurekaServer对外的restFull接口
 	 * Register the Jersey filter.
 	 * @param eurekaJerseyApp an {@link Application} for the filter to be registered
 	 * @return a jersey {@link FilterRegistrationBean}
@@ -257,6 +292,11 @@ public class EurekaServerAutoConfiguration implements WebMvcConfigurer {
 	@Configuration(proxyBeanMethods = false)
 	protected static class EurekaServerConfigBeanConfiguration {
 
+		/**
+		 * // 创建并加载EurekaServerConfig的实现类，主要是Eureka-server的配置信息
+		 * @param clientConfig
+		 * @return
+		 */
 		@Bean
 		@ConditionalOnMissingBean
 		public EurekaServerConfig eurekaServerConfig(EurekaClientConfig clientConfig) {
