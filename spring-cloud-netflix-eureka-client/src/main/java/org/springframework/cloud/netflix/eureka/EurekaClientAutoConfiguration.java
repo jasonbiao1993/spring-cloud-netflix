@@ -283,6 +283,7 @@ public class EurekaClientAutoConfiguration {
 				CloudEurekaInstanceConfig instanceConfig,
 				ApplicationInfoManager applicationInfoManager, @Autowired(
 						required = false) ObjectProvider<HealthCheckHandler> healthCheckHandler) {
+			// Eureka 客户端处理
 			return EurekaRegistration.builder(instanceConfig).with(applicationInfoManager)
 					.with(eurekaClient).with(healthCheckHandler).build();
 		}

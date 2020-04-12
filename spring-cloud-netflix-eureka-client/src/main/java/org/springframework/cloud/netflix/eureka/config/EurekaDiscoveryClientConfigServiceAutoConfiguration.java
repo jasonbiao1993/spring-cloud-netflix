@@ -48,6 +48,7 @@ public class EurekaDiscoveryClientConfigServiceAutoConfiguration {
 							.getBeanNamesForType(EurekaClient.class).length > 0) {
 				// If the parent has a EurekaClient as well it should be shutdown, so the
 				// local one can register accurate instance info
+				// 如果父集有EuerkaClient 应该关闭
 				this.context.getParent().getBean(EurekaClient.class).shutdown();
 			}
 		}

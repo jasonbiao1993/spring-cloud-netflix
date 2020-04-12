@@ -115,6 +115,7 @@ public class EurekaDiscoveryClientConfiguration {
 			if (autoRegistration != null) {
 				// register in case meta data changed
 				this.autoRegistration.stop();
+				// 开始自动注册
 				this.autoRegistration.start();
 			}
 		}

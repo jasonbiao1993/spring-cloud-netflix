@@ -11,6 +11,10 @@
 [eureka 缓存机制](https://www.cnblogs.com/yixinjishu/p/10871243.html)
 
 [eureka 如何承载大型系统的千万级访问](https://mp.weixin.qq.com/s/qjMphuPiihBmU2QtFMIfzw)
+
+[eureka client 注册服务分析](https://www.xssyun.com/wangluo/itsq/2760.html)
+
+[eureka client 获取全部注册信息](https://blog.csdn.net/rubbertree/article/details/90294158)
 ## 涉及概念
 * 服务注册：Eureka Client会通过发送REST请求的方式向Eureka Server注册自己的服务，提供自身的元数据，比如 IP 地址、端口、运行状况指标的URL、主页地址等信息。Eureka Server接收到注册请求后，就会把这些元数据信息存储在一个ConcurrentHashMap中。
 * 服务续约：在服务注册后，Eureka Client会维护一个心跳来持续通知Eureka Server，说明服务一直处于可用状态，防止被剔除。Eureka Client在默认的情况下会每隔30秒发送一次心跳来进行服务续约。
