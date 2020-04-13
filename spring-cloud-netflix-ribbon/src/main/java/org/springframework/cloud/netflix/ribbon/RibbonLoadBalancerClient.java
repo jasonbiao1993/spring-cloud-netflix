@@ -113,7 +113,10 @@ public class RibbonLoadBalancerClient implements LoadBalancerClient {
 	 */
 	public <T> T execute(String serviceId, LoadBalancerRequest<T> request, Object hint)
 			throws IOException {
+		// 1.根据用户请求的serviceId来获取具体的LoadBalanced
 		ILoadBalancer loadBalancer = getLoadBalancer(serviceId);
+
+		// 2.获取具体的server（也就是定位到哪台服务器的哪个端口号的具体服务信息）
 		Server server = getServer(loadBalancer, hint);
 		if (server == null) {
 			throw new IllegalStateException("No instances available for " + serviceId);
@@ -122,6 +125,7 @@ public class RibbonLoadBalancerClient implements LoadBalancerClient {
 				isSecure(server, serviceId),
 				serverIntrospector(serviceId).getMetadata(server));
 
+		// 3.执行HTTP请求
 		return execute(serviceId, ribbonServer, request);
 	}
 

@@ -80,6 +80,7 @@ public class RibbonAutoConfiguration {
 
 	@Bean
 	public SpringClientFactory springClientFactory() {
+		// 此工厂实例化对象会创建上下文 ApplicationContext, 从而加载对应的RibbonBalance
 		SpringClientFactory factory = new SpringClientFactory();
 		factory.setConfigurations(this.configurations);
 		return factory;

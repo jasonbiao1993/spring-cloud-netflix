@@ -100,9 +100,12 @@ public class EurekaRibbonClientConfiguration {
 	@ConditionalOnMissingBean
 	public ServerList<?> ribbonServerList(IClientConfig config,
 			Provider<EurekaClient> eurekaClientProvider) {
+		// 已经设置了服务列表
 		if (this.propertiesFactory.isSet(ServerList.class, serviceId)) {
 			return this.propertiesFactory.get(ServerList.class, config, serviceId);
 		}
+
+		// 获取eureka的服务列表，并进行包装, 里面每次实时获取eureka提供者列表
 		DiscoveryEnabledNIWSServerList discoveryServerList = new DiscoveryEnabledNIWSServerList(
 				config, eurekaClientProvider);
 		DomainExtractingServerList serverList = new DomainExtractingServerList(

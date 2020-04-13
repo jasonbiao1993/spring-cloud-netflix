@@ -138,12 +138,27 @@ public class RibbonClientConfiguration {
 		return serverList;
 	}
 
+	/**
+	 * ZoneAwareLoadBalancer 服务列表更新，通过定时任务实现，eureka 提供者列表发生改变，通过此处更新
+	 * @param config
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public ServerListUpdater ribbonServerListUpdater(IClientConfig config) {
 		return new PollingServerListUpdater(config);
 	}
 
+	/**
+	 *
+	 * @param config
+	 * @param serverList 如果eureka 作为注册中心 看 {@link org.springframework.cloud.netflix.ribbon.eureka.EurekaRibbonClientConfiguration#ribbonServerList}
+	 * @param serverListFilter
+	 * @param rule
+	 * @param ping
+	 * @param serverListUpdater
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public ILoadBalancer ribbonLoadBalancer(IClientConfig config,
