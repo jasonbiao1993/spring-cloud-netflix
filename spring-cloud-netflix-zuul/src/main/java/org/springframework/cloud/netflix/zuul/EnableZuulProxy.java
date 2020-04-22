@@ -34,6 +34,8 @@ import org.springframework.context.annotation.Import;
  * @author Spencer Gibb
  * @author Dave Syer
  * @author Biju Kunjummen
+ *
+ * 使能Zuul，存在代理
  */
 @EnableCircuitBreaker
 @Target(ElementType.TYPE)

@@ -34,6 +34,8 @@ import org.springframework.context.annotation.Import;
  *
  * @author Spencer Gibb
  * @author Biju Kunjummen
+ *
+ * 使能Zuul，不具备代理
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

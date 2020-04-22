@@ -56,9 +56,11 @@ import org.springframework.context.annotation.Import;
  * @author Spencer Gibb
  * @author Dave Syer
  * @author Biju Kunjummen
+ *
+ * 在ZuulServerAutoConfiguration基础上添加了使用了服务发现作为路由寻址功能, 并使用Ribbon做客户端的负载均衡
  */
 @Configuration(proxyBeanMethods = false)
-@Import({ RibbonCommandFactoryConfiguration.RestClientRibbonConfiguration.class,
+@Import({ RibbonCommandFactoryConfiguration.RestClientRibbonConfiguration.class,  // 引入RibbonCommandFactory配置
 		RibbonCommandFactoryConfiguration.OkHttpRibbonConfiguration.class,
 		RibbonCommandFactoryConfiguration.HttpClientRibbonConfiguration.class,
 		HttpClientConfiguration.class })
@@ -69,12 +71,21 @@ public class ZuulProxyAutoConfiguration extends ZuulServerAutoConfiguration {
 	@Autowired(required = false)
 	private List<RibbonRequestCustomizer> requestCustomizers = Collections.emptyList();
 
+	/**
+	 * 网关服务注册实例信息
+	 */
 	@Autowired(required = false)
 	private Registration registration;
 
+	/**
+	 * 服务发现客户端
+	 */
 	@Autowired
 	private DiscoveryClient discovery;
 
+	/**
+	 * serviceId和路由的映射逻辑
+	 */
 	@Autowired
 	private ServiceRouteMapper serviceRouteMapper;
 
@@ -84,6 +95,10 @@ public class ZuulProxyAutoConfiguration extends ZuulServerAutoConfiguration {
 				ZuulProxyAutoConfiguration.class);
 	}
 
+	/**
+	 * 静态和动态路由寻址: 静态从配置文件获取, 动态通过服务发现客户端完成. 后者优先级更高
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean(DiscoveryClientRouteLocator.class)
 	public DiscoveryClientRouteLocator discoveryRouteLocator() {
@@ -93,6 +108,10 @@ public class ZuulProxyAutoConfiguration extends ZuulServerAutoConfiguration {
 	}
 
 	// pre filters
+
+	/**
+	 * pre filter 顺序5，处理请求上下文供后续使用
+	 */
 	@Bean
 	@ConditionalOnMissingBean(PreDecorationFilter.class)
 	public PreDecorationFilter preDecorationFilter(RouteLocator routeLocator,
@@ -103,6 +122,10 @@ public class ZuulProxyAutoConfiguration extends ZuulServerAutoConfiguration {
 	}
 
 	// route filters
+
+	/**
+	 * route filter 顺序10 serverId 请求转发
+	 */
 	@Bean
 	@ConditionalOnMissingBean(RibbonRoutingFilter.class)
 	public RibbonRoutingFilter ribbonRoutingFilter(ProxyRequestHelper helper,
@@ -112,6 +135,9 @@ public class ZuulProxyAutoConfiguration extends ZuulServerAutoConfiguration {
 		return filter;
 	}
 
+	/**
+	 * route filter 顺序100 url 请求转发
+	 */
 	@Bean
 	@ConditionalOnMissingBean({ SimpleHostRoutingFilter.class,
 			CloseableHttpClient.class })

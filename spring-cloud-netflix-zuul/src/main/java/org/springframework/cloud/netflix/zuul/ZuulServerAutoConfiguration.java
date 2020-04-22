@@ -81,10 +81,15 @@ import static java.util.Collections.emptyList;
  * @author Spencer Gibb
  * @author Dave Syer
  * @author Biju Kunjummen
+ * 通过ZuulProperties进行配置路由寻址
  */
+// 作为配置累加载，proxyBeanMethods = false，不能使用其@Bean标注的方法进行注入
 @Configuration(proxyBeanMethods = false)
+// 激活zuul属性
 @EnableConfigurationProperties({ ZuulProperties.class })
+// 判断ZuulServlet和ZuulServletFilter是否存在
 @ConditionalOnClass({ ZuulServlet.class, ZuulServletFilter.class })
+// 是否存在Bean判断是否应该加载zuul服务
 @ConditionalOnBean(ZuulServerMarkerConfiguration.Marker.class)
 // Make sure to get the ServerProperties from the same place as a normal web app would
 // FIXME @Import(ServerPropertiesAutoConfiguration.class)
@@ -124,11 +129,22 @@ public class ZuulServerAutoConfiguration {
 				this.zuulProperties);
 	}
 
+	/**
+	 * zuulController, 包装了一个ZuulServlet类型的servlet, 实现对ZuulServlet类型的servlet的初始化.
+	 * 用于HandlerMapping的映射
+	 * @return
+	 */
 	@Bean
 	public ZuulController zuulController() {
 		return new ZuulController();
 	}
 
+	/**
+	 * 类似SpringMvc的处理
+	 * @param routes
+	 * @param zuulController
+	 * @return
+	 */
 	@Bean
 	public ZuulHandlerMapping zuulHandlerMapping(RouteLocator routes,
 			ZuulController zuulController) {
@@ -140,6 +156,7 @@ public class ZuulServerAutoConfiguration {
 
 	protected final Map<String, CorsConfiguration> getCorsConfigurations() {
 		if (this.corsConfigurations == null) {
+			// 跨域配置
 			ZuulCorsRegistry registry = new ZuulCorsRegistry();
 			this.configurers.forEach(configurer -> configurer.addCorsMappings(registry));
 			this.corsConfigurations = registry.getCorsConfigurations();
@@ -147,11 +164,19 @@ public class ZuulServerAutoConfiguration {
 		return this.corsConfigurations;
 	}
 
+	/**
+	 * zuul 刷新监听创建
+	 * @return
+	 */
 	@Bean
 	public ApplicationListener<ApplicationEvent> zuulRefreshRoutesListener() {
 		return new ZuulRefreshListener();
 	}
 
+	/**
+	 * 注册 Servlet
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean(name = "zuulServlet")
 	@ConditionalOnProperty(name = "zuul.use-filter", havingValue = "false",
@@ -165,6 +190,10 @@ public class ZuulServerAutoConfiguration {
 		return servlet;
 	}
 
+	/**
+	 * 注册Filter
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean(name = "zuulServletFilter")
 	@ConditionalOnProperty(name = "zuul.use-filter", havingValue = "true",
@@ -181,48 +210,74 @@ public class ZuulServerAutoConfiguration {
 		return filterRegistration;
 	}
 
-	// pre filters
+	// pre filters 	前置过滤器
 
+	/**
+	 * 	pre filter 顺序-3，标记处理Servlet类型
+	 */
 	@Bean
 	public ServletDetectionFilter servletDetectionFilter() {
 		return new ServletDetectionFilter();
 	}
 
+	/**
+	 * pre filter 顺序-1，包装请求体
+ 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public FormBodyWrapperFilter formBodyWrapperFilter() {
 		return new FormBodyWrapperFilter();
 	}
 
+	/**
+	 * pre filter 顺序1，标记调试标志
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public DebugFilter debugFilter() {
 		return new DebugFilter();
 	}
 
+	/**
+	 * pre filter 顺序-2，包装HttpServletRequest请求
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public Servlet30WrapperFilter servlet30WrapperFilter() {
 		return new Servlet30WrapperFilter();
 	}
 
-	// post filters
+	// post filters 后置过滤器
 
+	/**
+	 * post filter 10000 处理正常处理的请求
+	 */
 	@Bean
 	public SendResponseFilter sendResponseFilter(ZuulProperties properties) {
 		return new SendResponseFilter(zuulProperties);
 	}
 
+	/**
+	 * post filter 顺序0 处理有错误的请求
+	 */
 	@Bean
 	public SendErrorFilter sendErrorFilter() {
 		return new SendErrorFilter();
 	}
 
+	/**
+	 * route filter 顺序500 forward 请求转发
+	 */
 	@Bean
 	public SendForwardFilter sendForwardFilter() {
 		return new SendForwardFilter();
 	}
 
+	/**
+	 * ribbon
+	 * @param springClientFactory
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnProperty("zuul.ribbon.eager-load.enabled")
 	public ZuulRouteApplicationContextInitializer zuulRoutesApplicationContextInitiazer(
@@ -234,6 +289,7 @@ public class ZuulServerAutoConfiguration {
 	@Configuration(proxyBeanMethods = false)
 	protected static class ZuulFilterConfiguration {
 
+		// 过滤器注入，用于后续ZuulRunner处理filter使用
 		@Autowired
 		private Map<String, ZuulFilter> filters;
 
